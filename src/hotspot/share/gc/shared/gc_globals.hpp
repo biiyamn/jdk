@@ -27,6 +27,9 @@
 
 #include "runtime/globals_shared.hpp"
 #include "utilities/macros.hpp"
+#if INCLUDE_TESTGC
+#include "gc/test/test_globals.hpp"
+#endif
 #if INCLUDE_EPSILONGC
 #include "gc/epsilon/epsilon_globals.hpp"
 #endif
@@ -53,6 +56,16 @@
                  notproduct,                                                \
                  range,                                                     \
                  constraint)                                                \
+                                                                            \
+  TESTGC_ONLY(GC_TEST_FLAGS(                                                \
+develop,                                                                \
+develop_pd,                                                             \
+product,                                                                \
+product_pd,                                                             \
+notproduct,                                                             \
+range,                                                                  \
+constraint))                                                            \
+                                                                            \
                                                                             \
   EPSILONGC_ONLY(GC_EPSILON_FLAGS(                                          \
     develop,                                                                \
@@ -109,7 +122,8 @@
     constraint))                                                            \
                                                                             \
   /* gc */                                                                  \
-                                                                            \
+  product(bool, UseTestGC, false, EXPERIMENTAL,                             \
+          "Use the Test (no-op) garbage collector")                         \
   product(bool, UseSerialGC, false,                                         \
           "Use the Serial garbage collector")                               \
                                                                             \

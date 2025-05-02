@@ -142,6 +142,22 @@
 #define NOT_MANAGEMENT_RETURN_(code) { return code; }
 #define MANAGEMENT_ONLY(x)
 #endif // INCLUDE_MANAGEMENT
+#ifndef INCLUDE_TESTGC
+#define INCLUDE_TESTGC 1
+#endif // INCLUDE_TESTGC
+#if INCLUDE_TESTGC
+#define TESTGC_ONLY(x) x
+#define TESTGC_ONLY_ARG(arg) arg,
+#define NOT_TESTGC(x)
+#define NOT_TESTGC_RETURN        /* next token must be ; */
+#define NOT_TESTGC_RETURN_(code) /* next token must be ; */
+#else
+#define TESTGC_ONLY(x)
+#define TESTGC_ONLY_ARG(arg)
+#define NOT_TESTGC(x) x
+#define NOT_TESTGC_RETURN        {}
+#define NOT_TESTGC_RETURN_(code) { return code; }
+#endif // INCLUDE_EPSILONGC
 
 #ifndef INCLUDE_EPSILONGC
 #define INCLUDE_EPSILONGC 1
