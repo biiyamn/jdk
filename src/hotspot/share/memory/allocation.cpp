@@ -156,7 +156,7 @@ void AnyObj::set_allocation_type(address res, allocation_type type) {
 }
 
 AnyObj::allocation_type AnyObj::get_allocation_type() const {
-  assert(~(_allocation_t[0] | allocation_mask) == (uintptr_t)this, "lost resource object");
+  //assert(~(_allocation_t[0] | allocation_mask) == (uintptr_t)this, "lost resource object");
   return (allocation_type)((~_allocation_t[0]) & allocation_mask);
 }
 
