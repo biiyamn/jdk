@@ -26,7 +26,7 @@
 #define SHARE_GC_TEST_TESTARGUMENTS_HPP
 
 #include "gc/shared/gcArguments.hpp"
-#include "gc/test/testHeap.hpp"
+
 
 
 class TestArguments : public GCArguments {
@@ -35,7 +35,7 @@ private:
 
   virtual void initialize();
   virtual size_t conservative_max_heap_alignment();
-  virtual TestHeap* create_heap();
+  virtual CollectedHeap* create_heap();
 };
 
 #endif // SHARE_GC_TEST_EPSITESARGUMENTS_HPP
