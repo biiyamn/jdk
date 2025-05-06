@@ -66,7 +66,8 @@ public:
 
   static MemoryPool*    get_memory_pool(instanceHandle pool);
   static MemoryManager* get_memory_manager(instanceHandle mgr);
-
+  static void add_memory_pool(MemoryPool* p);
+  static void add_memory_manager(GCMemoryManager* m);
   static const int num_memory_pools() {
     return _pools_list->length();
   }

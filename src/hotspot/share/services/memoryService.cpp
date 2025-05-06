@@ -66,7 +66,17 @@ class GcThreadCountClosure: public ThreadClosure {
 void GcThreadCountClosure::do_thread(Thread* thread) {
   _count++;
 }
+void MemoryService::add_memory_pool(MemoryPool* p) {
+  log_info(gc)("MemoryService::add_memory_pool ");
+    _pools_list->append(p);
 
+}
+
+void MemoryService::add_memory_manager(GCMemoryManager* m) {
+  log_info(gc)("MemoryService::add_memory_manager");
+    _managers_list->append(m);
+
+}
 void MemoryService::set_universe_heap(CollectedHeap* heap) {
   ResourceMark rm; // For internal allocations in GrowableArray.
 
