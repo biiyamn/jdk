@@ -47,7 +47,7 @@
 #include "gc/z/shared/zSharedArguments.hpp"
 #endif
 #if INCLUDE_TESTGC
-#include "gc/test/testArguments.hpp"
+#include "gc/test/gcService.hpp"
 #endif
 struct IncludedGC {
   bool&               _flag;
@@ -60,7 +60,9 @@ struct IncludedGC {
 };
 
    EPSILONGC_ONLY(static EpsilonArguments    epsilonArguments;)
-   TESTGC_ONLY(static TestArguments    testArguments;)
+TESTGC_ONLY(static GCArguments& getTestArguments() {
+  return GCService::instance().create_arguments();
+})
         G1GC_ONLY(static G1Arguments         g1Arguments;)
   PARALLELGC_ONLY(static ParallelArguments   parallelArguments;)
     SERIALGC_ONLY(static SerialArguments     serialArguments;)
@@ -71,7 +73,7 @@ SHENANDOAHGC_ONLY(static ShenandoahArguments shenandoahArguments;)
 // line flag, CollectedHeap::Name and GCArguments instance.
 static const IncludedGC IncludedGCs[] = {
    EPSILONGC_ONLY_ARG(IncludedGC(UseEpsilonGC,       CollectedHeap::Epsilon,    epsilonArguments,    "epsilon gc"))
-   TESTGC_ONLY_ARG(IncludedGC(UseTestGC,       CollectedHeap::Test,    testArguments,    "test gc"))
+   TESTGC_ONLY_ARG(IncludedGC(UseTestGC,       CollectedHeap::Test,    getTestArguments(),    "test gc"))
 
         G1GC_ONLY_ARG(IncludedGC(UseG1GC,            CollectedHeap::G1,         g1Arguments,         "g1 gc"))
   PARALLELGC_ONLY_ARG(IncludedGC(UseParallelGC,      CollectedHeap::Parallel,   parallelArguments,   "parallel gc"))
