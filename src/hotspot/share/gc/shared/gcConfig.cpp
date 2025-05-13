@@ -60,9 +60,13 @@ struct IncludedGC {
 };
 
    EPSILONGC_ONLY(static EpsilonArguments    epsilonArguments;)
-TESTGC_ONLY(static GCArguments& getTestArguments() {
-  return GCService::instance().create_arguments();
-})
+   TESTGC_ONLY(GCArguments& getTestArguments()) {
+     static GCArguments* testArguments = nullptr;
+     if (testArguments == nullptr && UseTestGC) {
+       testArguments = &GCService::instance().create_arguments(); // Lazily initialized
+     }
+     return *testArguments;
+   }
         G1GC_ONLY(static G1Arguments         g1Arguments;)
   PARALLELGC_ONLY(static ParallelArguments   parallelArguments;)
     SERIALGC_ONLY(static SerialArguments     serialArguments;)
@@ -148,6 +152,10 @@ bool GCConfig::is_exactly_one_gc_selected() {
 
 GCArguments* GCConfig::select_gc() {
   // Fail immediately if an unsupported GC is selected
+  if (UseTestGC)
+  {
+    return &GCService::instance().create_arguments();
+  }
   fail_if_non_included_gc_is_selected();
 
   if (is_no_gc_selected()) {
