@@ -23,6 +23,8 @@
  */
 
 #include "precompiled.hpp"
+#include "gc/plugin/gcPlugin.hpp"
+#include "gc/plugin/gcPluginLoader.hpp"
 #include "gc/shared/cardTable.hpp"
 #include "gc/shared/collectedHeap.hpp"
 #include "gc/shared/gcLogPrecious.hpp"
@@ -44,7 +46,8 @@ uint CardTable::_card_size = 0;
 uint CardTable::_card_size_in_words = 0;
 
 void CardTable::initialize_card_size() {
-  assert(UseG1GC || UseParallelGC || UseSerialGC,
+  assert(UseG1GC || UseParallelGC || UseSerialGC ||
+         GCPluginLoader::has_capability(GCPluginCapabilityCardTableBarrier),
          "Initialize card size should only be called by card based collectors.");
 
   _card_size = GCCardSizeInBytes;
@@ -150,7 +153,9 @@ void CardTable::initialize_covered_region(void* region0_start, void* region1_sta
 }
 
 void CardTable::resize_covered_region(MemRegion new_region) {
-  assert(UseSerialGC || UseParallelGC, "only these two collectors");
+  assert(UseSerialGC || UseParallelGC ||
+         GCPluginLoader::has_capability(GCPluginCapabilityCardTableBarrier),
+         "only card-table collectors");
   assert(_whole_heap.contains(new_region),
          "attempt to cover area not in reserved area");
   assert(_covered[0].start() != nullptr, "precondition");

@@ -12,7 +12,7 @@
 class GCArguments;
 
 #define HOTSPOT_GC_PLUGIN_API_VERSION 1u
-#define HOTSPOT_GC_PLUGIN_HOTSPOT_ABI 0x4a444b3231474350ULL
+#define HOTSPOT_GC_PLUGIN_HOTSPOT_ABI 0x4a444b3231474351ULL
 #define HOTSPOT_GC_PLUGIN_ENTRY_POINT "JVM_GCPluginInit"
 
 #if defined(_WIN32)
@@ -23,7 +23,9 @@ class GCArguments;
 
 enum GCPluginCapabilities : uint64_t {
   GCPluginCapabilityNone = 0,
-  GCPluginCapabilityNoBarrier = 1u << 0
+  GCPluginCapabilityNoBarrier = 1u << 0,
+  GCPluginCapabilityCardTableBarrier = 1u << 1,
+  GCPluginCapabilityGenerational = 1u << 2
 };
 
 enum GCPluginBuildFlags : uint64_t {

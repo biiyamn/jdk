@@ -127,8 +127,8 @@ jint GenCollectedHeap::initialize() {
   bs->initialize();
   BarrierSet::set_barrier_set(bs);
 
-  _young_gen = _young_gen_spec->init(young_rs, rem_set());
-  _old_gen = _old_gen_spec->init(old_rs, rem_set());
+  _young_gen = create_young_generation(young_rs, rem_set());
+  _old_gen = create_old_generation(old_rs, rem_set());
 
   GCInitLogger::print();
 
@@ -137,6 +137,16 @@ jint GenCollectedHeap::initialize() {
 
 CardTableRS* GenCollectedHeap::create_rem_set(const MemRegion& reserved_region) {
   return new CardTableRS(reserved_region);
+}
+
+Generation* GenCollectedHeap::create_young_generation(ReservedSpace rs,
+                                                       CardTableRS* remset) {
+  return _young_gen_spec->init(rs, remset);
+}
+
+Generation* GenCollectedHeap::create_old_generation(ReservedSpace rs,
+                                                     CardTableRS* remset) {
+  return _old_gen_spec->init(rs, remset);
 }
 
 void GenCollectedHeap::initialize_size_policy(size_t init_eden_size,
@@ -190,6 +200,13 @@ static GenIsScavengable _is_scavengable;
 void GenCollectedHeap::post_initialize() {
   CollectedHeap::post_initialize();
 
+  initialize_generational_collector();
+
+  ScavengableNMethods::initialize(&_is_scavengable);
+}
+
+void GenCollectedHeap::initialize_generational_collector() {
+
   DefNewGeneration* def_new_gen = (DefNewGeneration*)_young_gen;
 
   def_new_gen->ref_processor_init();
@@ -199,8 +216,6 @@ void GenCollectedHeap::post_initialize() {
                          def_new_gen->from()->capacity());
 
   MarkSweep::initialize();
-
-  ScavengableNMethods::initialize(&_is_scavengable);
 }
 
 PreGenGCValues GenCollectedHeap::get_pre_gc_values() const {
@@ -996,8 +1011,10 @@ void GenCollectedHeap::save_marks() {
 }
 
 GenCollectedHeap* GenCollectedHeap::heap() {
-  // SerialHeap is the only subtype of GenCollectedHeap.
-  return named_heap<GenCollectedHeap>(CollectedHeap::Serial);
+  CollectedHeap* heap = Universe::heap();
+  assert(heap != nullptr, "Uninitialized heap");
+  assert(heap->is_gen_collected_heap(), "Heap must be generational");
+  return static_cast<GenCollectedHeap*>(heap);
 }
 
 #if INCLUDE_SERIALGC

@@ -229,6 +229,10 @@ class CollectedHeap : public CHeapObj<mtGC> {
 
   virtual const char* name() const = 0;
 
+  // Used by shared generational infrastructure without naming a concrete
+  // built-in or external collector.
+  virtual bool is_gen_collected_heap() const { return false; }
+
   /**
    * Returns JNI error code JNI_ENOMEM if memory could not be allocated,
    * and JNI_OK on success.

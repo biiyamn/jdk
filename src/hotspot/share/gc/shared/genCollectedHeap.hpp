@@ -98,6 +98,12 @@ private:
 
 protected:
 
+  virtual Generation* create_young_generation(ReservedSpace rs,
+                                               CardTableRS* remset);
+  virtual Generation* create_old_generation(ReservedSpace rs,
+                                             CardTableRS* remset);
+  virtual void initialize_generational_collector();
+
   GCMemoryManager* _young_manager;
   GCMemoryManager* _old_manager;
 
@@ -137,6 +143,7 @@ public:
 
   // Returns JNI_OK on success
   jint initialize() override;
+  bool is_gen_collected_heap() const override { return true; }
   virtual CardTableRS* create_rem_set(const MemRegion& reserved_region);
 
   void initialize_size_policy(size_t init_eden_size,

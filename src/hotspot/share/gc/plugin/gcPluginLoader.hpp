@@ -6,10 +6,10 @@
 #ifndef SHARE_GC_PLUGIN_GCPLUGINLOADER_HPP
 #define SHARE_GC_PLUGIN_GCPLUGINLOADER_HPP
 
+#include "gc/plugin/gcPlugin.hpp"
 #include "memory/allocation.hpp"
 
 class GCArguments;
-struct GCPluginDescriptor;
 
 class GCPluginLoader : public AllStatic {
  private:
@@ -20,6 +20,7 @@ class GCPluginLoader : public AllStatic {
  public:
   static GCArguments* load(const char* path, const char* options);
   static bool is_loaded() { return _descriptor != nullptr; }
+  static bool has_capability(uint64_t capability);
   static const char* name();
 };
 

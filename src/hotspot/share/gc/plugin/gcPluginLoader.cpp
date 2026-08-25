@@ -72,10 +72,23 @@ GCArguments* GCPluginLoader::load(const char* path, const char* options) {
     vm_exit_during_initialization("GC plugin build configuration does not match this JVM", path);
   }
 
-  if ((_descriptor->capabilities & GCPluginCapabilityNoBarrier) == 0) {
+  const uint64_t supported_capabilities =
+      GCPluginCapabilityNoBarrier |
+      GCPluginCapabilityCardTableBarrier |
+      GCPluginCapabilityGenerational;
+  if ((_descriptor->capabilities & ~supported_capabilities) != 0) {
     vm_exit_during_initialization(
-        "GC plugin requires unsupported barriers",
-        "GC Plugin API version 1 supports no-barrier collectors only");
+        "GC plugin declares unsupported capabilities", path);
+  }
+
+  const uint64_t barrier_capabilities =
+      _descriptor->capabilities &
+      (GCPluginCapabilityNoBarrier | GCPluginCapabilityCardTableBarrier);
+  if (barrier_capabilities != GCPluginCapabilityNoBarrier &&
+      barrier_capabilities != GCPluginCapabilityCardTableBarrier) {
+    vm_exit_during_initialization(
+        "GC plugin must select exactly one supported barrier kind",
+        "supported kinds are no-barrier and HotSpot card-table barrier");
   }
 
   if (_descriptor->create_arguments == nullptr) {
@@ -100,4 +113,8 @@ GCArguments* GCPluginLoader::load(const char* path, const char* options) {
 
 const char* GCPluginLoader::name() {
   return _descriptor == nullptr ? "external gc" : _descriptor->name;
+}
+
+bool GCPluginLoader::has_capability(uint64_t capability) {
+  return _descriptor != nullptr && (_descriptor->capabilities & capability) != 0;
 }
