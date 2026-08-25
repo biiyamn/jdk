@@ -96,6 +96,10 @@ class LogConfiguration : public AllStatic {
   // Perform necessary post-initialization after VM startup. Enables reconfiguration of logging.
   static void post_initialize();
 
+  // Apply the current output configuration to tag sets registered by static
+  // initializers in a library loaded after command-line logging was parsed.
+  static void reconfigure_after_dynamic_load();
+
   // Disable all logging, equivalent to -Xlog:disable.
   static void disable_logging();
 

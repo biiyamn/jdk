@@ -42,6 +42,7 @@
 #include "classfile/systemDictionaryShared.hpp"
 #include "classfile/vmClasses.hpp"
 #include "classfile/vmSymbols.hpp"
+#include "gc/plugin/gcPluginLoader.hpp"
 #include "jvm.h"
 #include "logging/log.hpp"
 #include "logging/logStream.hpp"
@@ -1985,7 +1986,9 @@ void FileMapInfo::map_or_load_heap_region() {
     } else if (ArchiveHeapLoader::can_load()) {
       success = ArchiveHeapLoader::load_heap_region(this);
     } else {
-      if (!UseCompressedOops && !ArchiveHeapLoader::can_map()) {
+      if (GCPluginLoader::is_loaded()) {
+        log_info(cds)("Cannot use CDS archived Java heap data with an external GC plugin.");
+      } else if (!UseCompressedOops && !ArchiveHeapLoader::can_map()) {
         // TODO - remove implicit knowledge of G1
         log_info(cds)("Cannot use CDS heap data. UseG1GC is required for -XX:-UseCompressedOops");
       } else {

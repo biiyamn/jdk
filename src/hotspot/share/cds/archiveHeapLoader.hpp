@@ -26,6 +26,7 @@
 #define SHARE_CDS_ARCHIVEHEAPLOADER_HPP
 
 #include "cds/filemap.hpp"
+#include "gc/plugin/gcPluginLoader.hpp"
 #include "gc/shared/gc_globals.hpp"
 #include "memory/allocation.hpp"
 #include "memory/allStatic.hpp"
@@ -50,7 +51,10 @@ public:
 
   // Can this VM map archived heap region? Currently only G1+compressed{oops,cp}
   static bool can_map() {
-    CDS_JAVA_HEAP_ONLY(return (UseG1GC && UseCompressedClassPointers);)
+    // External collectors do not yet promise the internal G1 archive-region
+    // state sharing required for direct mapping. They can still use CDS class
+    // metadata; only archived Java heap objects are disabled.
+    CDS_JAVA_HEAP_ONLY(return (UseG1GC && !GCPluginLoader::is_loaded() && UseCompressedClassPointers);)
     NOT_CDS_JAVA_HEAP(return false;)
   }
 

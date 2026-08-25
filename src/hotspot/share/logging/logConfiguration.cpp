@@ -119,6 +119,22 @@ void LogConfiguration::initialize(jlong vm_start_time) {
   }
 }
 
+void LogConfiguration::reconfigure_after_dynamic_load() {
+  ConfigurationLock cl;
+  for (size_t idx = 0; idx < _n_outputs; idx++) {
+    LogSelectionList selections;
+    stringStream errors;
+    bool parsed = selections.parse(_outputs[idx]->config_string(), &errors);
+    guarantee(parsed, "current log configuration must be parseable: %s",
+              errors.base());
+
+    // configure_output() recomputes the configuration string, so preserve the
+    // decorators before updating this output.
+    LogDecorators decorators = _outputs[idx]->decorators();
+    configure_output(idx, selections, decorators);
+  }
+}
+
 void LogConfiguration::finalize() {
   disable_outputs();
   FREE_C_HEAP_ARRAY(LogOutput*, _outputs);

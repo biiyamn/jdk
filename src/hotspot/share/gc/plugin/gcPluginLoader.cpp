@@ -6,7 +6,12 @@
 #include "precompiled.hpp"
 #include "gc/plugin/gcPlugin.hpp"
 #include "gc/plugin/gcPluginLoader.hpp"
+#include "logging/logConfiguration.hpp"
+#if INCLUDE_G1GC
+#include "gc/g1/heapRegion.hpp"
+#endif
 #include "logging/log.hpp"
+#include "runtime/globals_extension.hpp"
 #include "runtime/java.hpp"
 #include "runtime/os.hpp"
 #include "utilities/globalDefinitions.hpp"
@@ -35,6 +40,10 @@ GCArguments* GCPluginLoader::load(const char* path, const char* options) {
   if (_library == nullptr) {
     vm_exit_during_initialization("Unable to load GC plugin", library_error);
   }
+
+  // dlopen runs the plugin's static constructors. Any unified-log tag sets
+  // registered there missed the earlier command-line logging configuration.
+  LogConfiguration::reconfigure_after_dynamic_load();
 
   void* entry = os::dll_lookup(_library, HOTSPOT_GC_PLUGIN_ENTRY_POINT);
   if (entry == nullptr) {
@@ -72,10 +81,13 @@ GCArguments* GCPluginLoader::load(const char* path, const char* options) {
     vm_exit_during_initialization("GC plugin build configuration does not match this JVM", path);
   }
 
-  const uint64_t supported_capabilities =
+  uint64_t supported_capabilities =
       GCPluginCapabilityNoBarrier |
       GCPluginCapabilityCardTableBarrier |
       GCPluginCapabilityGenerational;
+#if INCLUDE_G1GC
+  supported_capabilities |= GCPluginCapabilityG1Barrier;
+#endif
   if ((_descriptor->capabilities & ~supported_capabilities) != 0) {
     vm_exit_during_initialization(
         "GC plugin declares unsupported capabilities", path);
@@ -83,13 +95,26 @@ GCArguments* GCPluginLoader::load(const char* path, const char* options) {
 
   const uint64_t barrier_capabilities =
       _descriptor->capabilities &
-      (GCPluginCapabilityNoBarrier | GCPluginCapabilityCardTableBarrier);
+      (GCPluginCapabilityNoBarrier |
+       GCPluginCapabilityCardTableBarrier |
+       GCPluginCapabilityG1Barrier);
   if (barrier_capabilities != GCPluginCapabilityNoBarrier &&
-      barrier_capabilities != GCPluginCapabilityCardTableBarrier) {
+      barrier_capabilities != GCPluginCapabilityCardTableBarrier &&
+      barrier_capabilities != GCPluginCapabilityG1Barrier) {
     vm_exit_during_initialization(
         "GC plugin must select exactly one supported barrier kind",
-        "supported kinds are no-barrier and HotSpot card-table barrier");
+        "supported kinds are no-barrier, HotSpot card-table, and HotSpot G1 barrier");
   }
+
+  // G1 support in shared HotSpot code is historically selected through
+  // UseG1GC. Activate that existing integration profile only after the
+  // external plugin has passed protocol and capability validation. The
+  // plugin still supplies GCArguments and the heap implementation.
+#if INCLUDE_G1GC
+  if (has_capability(GCPluginCapabilityG1Barrier)) {
+    FLAG_SET_ERGO(UseG1GC, true);
+  }
+#endif
 
   if (_descriptor->create_arguments == nullptr) {
     vm_exit_during_initialization("GC plugin has no GCArguments factory", path);
@@ -117,4 +142,16 @@ const char* GCPluginLoader::name() {
 
 bool GCPluginLoader::has_capability(uint64_t capability) {
   return _descriptor != nullptr && (_descriptor->capabilities & capability) != 0;
+}
+
+void GCPluginLoader::initialize_runtime() {
+#if INCLUDE_G1GC
+  if (has_capability(GCPluginCapabilityG1Barrier)) {
+    // The external G1 implementation has its own copy of HeapRegion's static
+    // geometry. Existing HotSpot G1 barrier, CDS, C1, C2, and serviceability
+    // code use the libjvm copy, so initialize that matching runtime profile
+    // after the plugin has computed the heap size and alignments.
+    HeapRegion::setup_heap_region_size(MaxHeapSize);
+  }
+#endif
 }

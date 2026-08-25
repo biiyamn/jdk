@@ -24,6 +24,7 @@
  */
 
 #include "precompiled.hpp"
+#include "gc/plugin/gcPluginLoader.hpp"
 #include "gc/shared/cardTable.hpp"
 #include "gc/shared/gcArguments.hpp"
 #include "logging/log.hpp"
@@ -62,6 +63,7 @@ void GCArguments::initialize() {
 
 void GCArguments::initialize_heap_sizes() {
   initialize_alignments();
+  GCPluginLoader::initialize_runtime();
   initialize_heap_flags_and_sizes();
   initialize_size_info();
 }

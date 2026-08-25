@@ -19,6 +19,7 @@ class GCPluginLoader : public AllStatic {
 
  public:
   static GCArguments* load(const char* path, const char* options);
+  static void initialize_runtime();
   static bool is_loaded() { return _descriptor != nullptr; }
   static bool has_capability(uint64_t capability);
   static const char* name();
