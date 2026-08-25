@@ -142,7 +142,6 @@
 #define NOT_MANAGEMENT_RETURN_(code) { return code; }
 #define MANAGEMENT_ONLY(x)
 #endif // INCLUDE_MANAGEMENT
-
 #ifndef INCLUDE_EPSILONGC
 #define INCLUDE_EPSILONGC 1
 #endif // INCLUDE_EPSILONGC

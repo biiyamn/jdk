@@ -23,6 +23,7 @@
  */
 
 #include "precompiled.hpp"
+#include "gc/plugin/gcPluginLoader.hpp"
 #include "gc/shared/gcConfig.hpp"
 #include "runtime/globals_extension.hpp"
 #include "runtime/java.hpp"
@@ -46,7 +47,6 @@
 #if INCLUDE_ZGC
 #include "gc/z/shared/zSharedArguments.hpp"
 #endif
-
 struct IncludedGC {
   bool&               _flag;
   CollectedHeap::Name _name;
@@ -143,6 +143,14 @@ GCArguments* GCConfig::select_gc() {
   // Fail immediately if an unsupported GC is selected
   fail_if_non_included_gc_is_selected();
 
+  if (GCPlugin != nullptr) {
+    if (!is_no_gc_selected()) {
+      vm_exit_during_initialization(
+          "-XX:GCPlugin cannot be combined with a built-in garbage collector");
+    }
+    return GCPluginLoader::load(GCPlugin, GCPluginOptions);
+  }
+
   if (is_no_gc_selected()) {
     // Try select GC ergonomically
     select_gc_ergonomically();
@@ -180,6 +188,9 @@ void GCConfig::initialize() {
 }
 
 bool GCConfig::is_gc_supported(CollectedHeap::Name name) {
+  if (name == CollectedHeap::External) {
+    return GCPluginLoader::is_loaded();
+  }
   FOR_EACH_INCLUDED_GC(gc) {
     if (gc->_name == name && gc->_arguments.is_supported()) {
       // Supported
@@ -192,6 +203,9 @@ bool GCConfig::is_gc_supported(CollectedHeap::Name name) {
 }
 
 bool GCConfig::is_gc_selected(CollectedHeap::Name name) {
+  if (name == CollectedHeap::External) {
+    return GCPlugin != nullptr;
+  }
   FOR_EACH_INCLUDED_GC(gc) {
     if (gc->_name == name && gc->_flag) {
       // Selected
@@ -208,6 +222,9 @@ bool GCConfig::is_gc_selected_ergonomically() {
 }
 
 const char* GCConfig::hs_err_name() {
+  if (GCPluginLoader::is_loaded()) {
+    return GCPluginLoader::name();
+  }
   if (is_exactly_one_gc_selected()) {
     // Exactly one GC selected
     FOR_EACH_INCLUDED_GC(gc) {
@@ -222,6 +239,9 @@ const char* GCConfig::hs_err_name() {
 }
 
 const char* GCConfig::hs_err_name(CollectedHeap::Name name) {
+  if (name == CollectedHeap::External) {
+    return GCPluginLoader::name();
+  }
   FOR_EACH_INCLUDED_GC(gc) {
     if (gc->_name == name) {
       return gc->_hs_err_name;

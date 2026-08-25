@@ -57,7 +57,7 @@ ifeq ($(call isTargetOs, linux), true)
   ifneq ($(FILTER_SYMBOLS_PATTERN), )
     FILTER_SYMBOLS_PATTERN := $(FILTER_SYMBOLS_PATTERN)|
   endif
-  FILTER_SYMBOLS_PATTERN := $(FILTER_SYMBOLS_PATTERN)^_ZTV|^gHotSpotVM|^UseSharedSpaces$$
+  FILTER_SYMBOLS_PATTERN := $(FILTER_SYMBOLS_PATTERN)^gHotSpotVM|^UseSharedSpaces$$
   FILTER_SYMBOLS_PATTERN := $(FILTER_SYMBOLS_PATTERN)|^_ZN9Arguments17SharedArchivePathE$$
   FILTER_SYMBOLS_AWK_SCRIPT := \
       '{ \
@@ -71,7 +71,7 @@ else ifeq ($(call isTargetOs, macosx), true)
   ifneq ($(FILTER_SYMBOLS_PATTERN), )
     FILTER_SYMBOLS_PATTERN := $(FILTER_SYMBOLS_PATTERN)|
   endif
-  FILTER_SYMBOLS_PATTERN := $(FILTER_SYMBOLS_PATTERN)^_ZTV|^gHotSpotVM
+  FILTER_SYMBOLS_PATTERN := $(FILTER_SYMBOLS_PATTERN)^gHotSpotVM
   FILTER_SYMBOLS_AWK_SCRIPT := \
       '{ \
         if ($$3 ~ /$(FILTER_SYMBOLS_PATTERN)/) print $$3; \

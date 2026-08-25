@@ -109,6 +109,11 @@
     constraint))                                                            \
                                                                             \
   /* gc */                                                                  \
+  product(ccstr, GCPlugin, nullptr, EXPERIMENTAL,                           \
+          "Path to an external GC plugin library")                         \
+                                                                            \
+  product(ccstr, GCPluginOptions, nullptr, EXPERIMENTAL,                    \
+          "Opaque options passed to the external GC plugin")               \
                                                                             \
   product(bool, UseSerialGC, false,                                         \
           "Use the Serial garbage collector")                               \
